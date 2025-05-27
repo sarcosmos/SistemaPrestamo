@@ -29,6 +29,10 @@ class DashboardController extends Controller
         // Total de facturas generadas
         $totalFacturas = Factura::count();
 
+        // Total de facturas por tipo
+        $totalFacturasPrestamo = Factura::where('tipo', 'prestamo')->count();
+        $totalFacturasDevolucion = Factura::where('tipo', 'devolucion')->count();
+
         return Inertia::render('Dashboard', [
             'totalBienes' => $totalBienes,
             'sumaCantidad' => $sumaCantidad,
@@ -36,6 +40,8 @@ class DashboardController extends Controller
             'totalPrestamos' => $totalPrestamos,
             'totalDevoluciones' => $totalDevoluciones,
             'totalFacturas' => $totalFacturas,
+            'totalFacturasPrestamo' => $totalFacturasPrestamo,
+            'totalFacturasDevolucion' => $totalFacturasDevolucion,
         ]);
     }
 }
