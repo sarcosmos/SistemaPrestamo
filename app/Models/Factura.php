@@ -14,6 +14,7 @@ class Factura extends Model
         'numero_factura',
         'fecha_emision',
         'total',
+        'tipo',
     ];
 
     public function prestamo()

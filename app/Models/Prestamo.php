@@ -20,11 +20,10 @@ class Prestamo extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function factura()
+    public function facturas()
     {
-        return $this->hasOne(Factura::class);
+        return $this->hasMany(Factura::class);
     }
-
 
     public function bienes()
     {

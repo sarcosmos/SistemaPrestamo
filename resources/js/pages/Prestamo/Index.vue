@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, usePage, Link } from '@inertiajs/vue3';
-import { CirclePlus, Eye } from 'lucide-vue-next';
+import { CirclePlus, Eye, FilePlus, FileCheck2, FileDown } from 'lucide-vue-next';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableRow, TableHeader } from '@/components/ui/table';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ interface PrestamoPageProps extends SharedData {
       fecha_prestamo: string;
       fecha_devolucion: string | null;
       usuario: { name: string };
-      factura?: { id: number };
+      facturas?: { id: number; tipo: string; numero_factura: string }[];
       bienes: {
         id: number;
         nombre: string;
@@ -24,9 +24,7 @@ interface PrestamoPageProps extends SharedData {
           estado_devolucion: string;
         };
       }[];
-    }[];
-    current_page: number;
-    last_page: number;
+    }[]; current_page: number; last_page: number;
     links: { url: string | null; label: string; active: boolean }[];
   };
 }
@@ -69,6 +67,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             <TableHead class="text-center">Cantidad Prestada</TableHead>
             <TableHead class="text-center">Cantidad Devuelta</TableHead>
             <TableHead class="text-center">Estado Devolución</TableHead>
+            <TableHead class="text-center">Tipo Factura</TableHead>
             <TableHead class="text-center">Acciones</TableHead>
           </TableRow>
         </TableHeader>
@@ -105,22 +104,51 @@ const breadcrumbs: BreadcrumbItem[] = [
                   </span>
                 </TableCell>
                 <TableCell class="text-center" v-if="index === 0" :rowspan="prestamo.bienes.length">
+                  <div class="flex flex-col gap-1 items-center">
+                    <span
+                      v-for="factura in prestamo.facturas"
+                      :key="factura.id"
+                      class="text-sm font-medium text-gray-700 capitalize"
+                    >
+                      Factura de {{ factura.tipo.toLowerCase() === 'prestamo' ? 'préstamo' : 'devolución' }}
+                    </span>
+                    <span v-if="!prestamo.facturas?.length" class="text-sm text-gray-400">Sin factura</span>
+                  </div>
+                </TableCell>
+                <TableCell class="text-center" v-if="index === 0" :rowspan="prestamo.bienes.length">
                   <div class="flex flex-col gap-2 items-center">
-                    <Button asChild size="sm" class="bg-blue-500 text-white hover:bg-blue-700">
+                    <Button asChild size="icon" class="bg-blue-500 text-white hover:bg-blue-700">
                       <Link :href="`/prestamo/${prestamo.id}/edit`">
                         <Eye class="w-4 h-4" />
                       </Link>
                     </Button>
-                    <Button
-                      v-if="prestamo.factura"
-                      asChild
-                      size="sm"
-                      class="bg-green-500 text-white hover:bg-green-700"
-                    >
-                      <a :href="`/factura/${prestamo.factura.id}/descargar`" target="_blank">
-                        Descargar Factura
-                      </a>
-                    </Button>
+
+                    <template v-for="factura in prestamo.facturas" :key="factura.id">
+                      <Button
+                        asChild
+                        size="icon"
+                        :class="factura.tipo.toLowerCase() === 'prestamo'
+                          ? 'bg-green-500 hover:bg-green-700'
+                          : factura.tipo.toLowerCase() === 'devolucion'
+                            ? 'bg-yellow-400 hover:bg-yellow-600'
+                            : 'bg-gray-400 hover:bg-gray-600'"
+                        :title="`Descargar factura de ${factura.tipo.toLowerCase() === 'prestamo' ? 'préstamo' : 'devolución'}`"
+                      >
+                        <a
+                          :href="`/factura/${factura.id}/descargar`"
+                          target="_blank"
+                        >
+                          <component
+                            :is="factura.tipo.toLowerCase() === 'prestamo'
+                              ? FilePlus
+                              : factura.tipo.toLowerCase() === 'devolucion'
+                                ? FileCheck2
+                                : FileDown"
+                            class="w-4 h-4 text-white"
+                          />
+                        </a>
+                      </Button>
+                    </template>
                   </div>
                 </TableCell>
               </TableRow>
@@ -144,5 +172,4 @@ const breadcrumbs: BreadcrumbItem[] = [
     </div>
   </AppLayout>
 </template>
-
 
