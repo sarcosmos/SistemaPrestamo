@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bien;
 use App\Models\User;
 use App\Models\Prestamo;
+use App\Models\Factura;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -25,12 +26,16 @@ class DashboardController extends Controller
             return $prestamo->bienes->sum(fn($bien) => $bien->pivot->cantidad_devuelta);
         });
 
+        // Total de facturas generadas
+        $totalFacturas = Factura::count();
+
         return Inertia::render('Dashboard', [
             'totalBienes' => $totalBienes,
             'sumaCantidad' => $sumaCantidad,
             'totalUsuarios' => $totalUsuarios,
             'totalPrestamos' => $totalPrestamos,
             'totalDevoluciones' => $totalDevoluciones,
+            'totalFacturas' => $totalFacturas,
         ]);
     }
 }

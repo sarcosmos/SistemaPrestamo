@@ -9,24 +9,30 @@ import { Button } from '@/components/ui/button';
 
 interface PrestamoPageProps extends SharedData {
   prestamos: {
-    id: number;
-    fecha_prestamo: string;
-    fecha_devolucion: string | null;
-    usuario: { name: string };
-    bienes: {
+    data: {
       id: number;
-      nombre: string;
-      pivot: {
-        cantidad_prestada: number;
-        cantidad_devuelta: number;
-        estado_devolucion: string;
-      };
+      fecha_prestamo: string;
+      fecha_devolucion: string | null;
+      usuario: { name: string };
+      factura?: { id: number };
+      bienes: {
+        id: number;
+        nombre: string;
+        pivot: {
+          cantidad_prestada: number;
+          cantidad_devuelta: number;
+          estado_devolucion: string;
+        };
+      }[];
     }[];
-  }[];
+    current_page: number;
+    last_page: number;
+    links: { url: string | null; label: string; active: boolean }[];
+  };
 }
 
 const { props } = usePage<PrestamoPageProps>();
-const prestamos = computed(() => props.prestamos);
+const prestamos = computed(() => props.prestamos.data);
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -66,7 +72,7 @@ const breadcrumbs: BreadcrumbItem[] = [
             <TableHead class="text-center">Acciones</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody v-if="prestamos && prestamos.length">
           <template v-for="prestamo in prestamos" :key="prestamo.id">
             <template v-for="(bien, index) in prestamo.bienes" :key="bien.id">
               <TableRow>
@@ -99,17 +105,42 @@ const breadcrumbs: BreadcrumbItem[] = [
                   </span>
                 </TableCell>
                 <TableCell class="text-center" v-if="index === 0" :rowspan="prestamo.bienes.length">
-                  <Button asChild size="sm" class="bg-blue-500 text-white hover:bg-blue-700">
-                    <Link :href="`/prestamo/${prestamo.id}/edit`">
-                      <Eye class="w-4 h-4" />
-                    </Link>
-                  </Button>
+                  <div class="flex flex-col gap-2 items-center">
+                    <Button asChild size="sm" class="bg-blue-500 text-white hover:bg-blue-700">
+                      <Link :href="`/prestamo/${prestamo.id}/edit`">
+                        <Eye class="w-4 h-4" />
+                      </Link>
+                    </Button>
+                    <Button
+                      v-if="prestamo.factura"
+                      asChild
+                      size="sm"
+                      class="bg-green-500 text-white hover:bg-green-700"
+                    >
+                      <a :href="`/factura/${prestamo.factura.id}/descargar`" target="_blank">
+                        Descargar Factura
+                      </a>
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             </template>
           </template>
         </TableBody>
       </Table>
+
+      <!-- Paginación -->
+      <div class="flex justify-center mt-6 gap-2">
+        <Button
+          v-for="link in props.prestamos.links"
+          :key="link.label"
+          :disabled="!link.url"
+          :class="{ 'bg-indigo-500 text-white': link.active }"
+          asChild
+        >
+          <Link :href="link.url || ''" v-html="link.label" />
+        </Button>
+      </div>
     </div>
   </AppLayout>
 </template>

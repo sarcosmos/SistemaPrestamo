@@ -2,24 +2,33 @@
 
 namespace App\Http\Controllers;
 
+
+use App\Models\Factura;
+use Illuminate\Support\Str;
 use App\Models\Bien;
 use App\Models\Prestamo;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+
 
 class PrestamoController extends Controller
 {
     /**
      * Mostrar todos los préstamos.
      */
-    public function index()
-    {
-        return Inertia::render('Prestamo/Index', [
-            'prestamos' => Prestamo::with('usuario', 'bienes')->get()
-        ]);
-    }
+public function index()
+{
+    return Inertia::render('Prestamo/Index', [
+        'prestamos' => Prestamo::with('usuario', 'bienes', 'factura')
+            ->orderBy('created_at', 'desc')
+            ->paginate(5)
+    ]);
+}
+
 
     /**
      * Mostrar formulario para crear un nuevo préstamo.
@@ -35,16 +44,19 @@ class PrestamoController extends Controller
     /**
      * Registrar un nuevo préstamo.
      */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'bienes' => 'required|array',
-            'bienes.*.bien_id' => 'required|exists:biens,id',
-            'bienes.*.cantidad' => 'required|integer|min:1',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'bienes' => 'required|array',
+        'bienes.*.bien_id' => 'required|exists:biens,id',
+        'bienes.*.cantidad' => 'required|integer|min:1',
+    ]);
 
-        DB::transaction(function () use ($request) {
+    $prestamo = null;
+
+    try {
+        DB::transaction(function () use ($request, &$prestamo) {
             $prestamo = Prestamo::create([
                 'user_id' => $request->user_id,
             ]);
@@ -63,9 +75,32 @@ class PrestamoController extends Controller
                 ]);
             }
         });
-
-        return redirect()->route('prestamo.index')->with('success', 'Préstamo registrado correctamente.');
+    } catch (\Exception $e) {
+        return redirect()->back()->withErrors('Error al registrar el préstamo: ' . $e->getMessage());
     }
+
+    if (!$prestamo) {
+        return redirect()->back()->withErrors('No se pudo registrar el préstamo.');
+    }
+
+    $factura = Factura::create([
+        'prestamo_id' => $prestamo->id,
+        'numero_factura' => 'FAC-' . strtoupper(Str::random(8)),
+        'fecha_emision' => now(),
+        'total' => 0,
+    ]);
+
+    
+    $pdf = Pdf::loadView('factura.pdf', [
+        'factura' => $factura->load('prestamo.usuario', 'prestamo.bienes')
+        ]);
+
+    Storage::put("public/facturas/{$factura->numero_factura}.pdf", $pdf->output());
+
+
+    return redirect()->route('prestamo.index')->with('success', 'Préstamo registrado correctamente.');
+}
+
 
     /**
      * Mostrar formulario para registrar devolución.
@@ -125,5 +160,7 @@ public function update(Request $request, Prestamo $prestamo)
         $prestamo->delete();
         return redirect()->route('prestamo.index')->with('success', 'Préstamo eliminado.');
     }
+
+    
 }
 

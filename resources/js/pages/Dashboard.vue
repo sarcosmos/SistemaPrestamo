@@ -25,6 +25,7 @@ const { props } = usePage<{
   totalUsuarios: number;
   totalPrestamos: number;
   totalDevoluciones: number;
+  totalFacturas: number;
 }>();
 
 const totalBienes = props.totalBienes;
@@ -32,6 +33,8 @@ const sumaCantidad = props.sumaCantidad;
 const totalUsuarios = props.totalUsuarios;
 const totalPrestamos = props.totalPrestamos;
 const totalDevoluciones = props.totalDevoluciones;
+const totalFacturas = props.totalFacturas;
+
 </script>
 
 <template>
@@ -60,6 +63,7 @@ const totalDevoluciones = props.totalDevoluciones;
         <div class="relative aspect-video overflow-hidden rounded-xl flex flex-col justify-between p-4 bg-green-500 text-white shadow-lg transition-transform duration-300 hover:scale-105">
           <FileSpreadsheet class="w-10 h-10" stroke-width="1" />
           <span class="text-lg font-semibold">Facturas de Préstamos</span>
+          <p class="text-3xl font-bold">{{ totalFacturas }}</p>
         </div>
 
         <!-- Bienes -->

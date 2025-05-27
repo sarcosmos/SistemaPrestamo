@@ -20,6 +20,12 @@ class Prestamo extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function factura()
+    {
+        return $this->hasOne(Factura::class);
+    }
+
+
     public function bienes()
     {
         return $this->belongsToMany(Bien::class, 'prestamo_bien')
